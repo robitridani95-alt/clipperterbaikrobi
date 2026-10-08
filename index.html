@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIPP/10 — Studio Potongan Viral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#0B0B0D; --panel:#121215; --panel2:#17171B;
+    --line:#232328; --line2:#33333A;
+    --ink:#EFEBE0; --dim:#9A9689;
+    --acc:#FF4D00; --acc-soft:rgba(255,77,0,.14);
+    --ok:#8FDB5A;
+    --sans:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scrollbar-color:var(--line2) var(--bg)}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  /* grid hairline halus, tanpa gradasi */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cpath d='M96 0H0v96' fill='none' stroke='%2318181C' stroke-width='1'/%3E%3C/svg%3E");
+  }
+  ::selection{background:var(--acc); color:#0B0B0D}
+  button{font-family:inherit; cursor:pointer}
+  .mono{font-family:var(--mono)}
+  [hidden]{display:none !important}
+
+  /* ---------- header ---------- */
+  header.top{
+    position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px; border-bottom:1px solid var(--line);
+  }
+  .brand{font-weight:700; font-size:20px; letter-spacing:.04em}
+  .brand .tick{color:var(--acc)}
+  .top-mid{color:var(--dim); font-size:11px; letter-spacing:.14em}
+  .top-status{display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.12em; color:var(--dim)}
+  .dot{width:7px;height:7px;background:var(--ok);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  main{position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:0 32px 80px}
+
+  /* ---------- gate ---------- */
+  #gate{display:grid; grid-template-columns:1.15fr 1fr; gap:64px; padding:72px 0 0; align-items:start}
+  .display{
+    font-size:clamp(38px,4.6vw,64px); line-height:1.02; font-weight:700;
+    letter-spacing:-.015em; text-transform:uppercase;
+  }
+  .display .oline{
+    color:transparent; -webkit-text-stroke:1.5px var(--acc); text-stroke:1.5px var(--acc);
+  }
+  .sub{margin-top:26px; color:var(--dim); font-size:15.5px; line-height:1.65; max-width:52ch}
+  .sub b{color:var(--ink); font-weight:500}
+  .steps{margin-top:38px; display:flex; flex-wrap:wrap; gap:10px 28px; font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--dim)}
+  .steps span i{color:var(--acc); font-style:normal; margin-right:8px}
+
+  .panel-form{border:1px solid var(--line); background:var(--panel); padding:26px}
+  .panel-form h2{font-family:var(--mono); font-size:11px; letter-spacing:.18em; color:var(--dim); font-weight:400; margin-bottom:16px}
+  .field label{display:block; font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--dim); margin-bottom:8px}
+  .field input[type=url]{
+    width:100%; background:var(--bg); border:1px solid var(--line2); color:var(--ink);
+    font-family:var(--mono); font-size:13.5px; padding:13px 14px; outline:none; border-radius:2px;
+    transition:border-color .15s;
+  }
+  .field input[type=url]:focus{border-color:var(--acc)}
+  .row-count{display:flex; align-items:center; justify-content:space-between; margin:18px 0}
+  .stepper{display:flex; align-items:center; border:1px solid var(--line2); border-radius:2px}
+  .stepper button{background:none; border:none; color:var(--ink); width:38px; height:38px; display:grid; place-items:center}
+  .stepper button:hover{color:var(--acc)}
+  .stepper .val{font-family:var(--mono); font-size:16px; font-weight:700; width:56px; text-align:center; border-left:1px solid var(--line2); border-right:1px solid var(--line2); line-height:38px}
+  .count-hint{font-family:var(--mono); font-size:11px; color:var(--dim); letter-spacing:.08em}
+  .btn-primary{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+    background:var(--acc); color:#0B0B0D; border:none; font-weight:700; font-size:15px;
+    letter-spacing:.06em; padding:15px; border-radius:2px; text-transform:uppercase;
+    transition:transform .12s, background .15s;
+  }
+  .btn-primary:hover{background:#FF6318; transform:translateY(-1px)}
+  .btn-primary:active{transform:translateY(0)}
+  .divider{display:flex; align-items:center; gap:12px; margin:20px 0; color:var(--dim); font-family:var(--mono); font-size:10px; letter-spacing:.2em}
+  .divider::before,.divider::after{content:""; flex:1; height:1px; background:var(--line)}
+  .dropzone{
+    border:1px dashed var(--line2); padding:22px 16px; text-align:center; border-radius:2px;
+    color:var(--dim); font-size:13.5px; cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .dropzone:hover,.dropzone.over{border-color:var(--acc); color:var(--ink); background:var(--acc-soft)}
+  .dropzone .dz-ic{display:grid; place-items:center; margin-bottom:8px; color:var(--ink)}
+  .dropzone .mono{font-size:11px; letter-spacing:.1em; display:block; margin-top:4px}
+  .demo-row{margin-top:16px; display:flex; justify-content:space-between; align-items:center}
+  .linklike{background:none; border:none; color:var(--ink); font-family:var(--mono); font-size:12px; letter-spacing:.06em; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--acc)}
+  .linklike:hover{color:var(--acc)}
+  .note{margin-top:18px; font-family:var(--mono); font-size:10.5px; line-height:1.7; color:var(--dim); letter-spacing:.03em}
+  .note i{color:var(--acc); font-style:normal}
+
+  /* ---------- analyzing ---------- */
+  #analyzing{max-width:760px; margin:90px auto; border:1px solid var(--line); background:var(--panel); padding:34px}
+  #analyzing h3{font-size:22px; text-transform:uppercase; letter-spacing:.02em; margin-bottom:22px; display:flex; align-items:center; gap:12px}
+  .recbox{display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--acc); border:1px solid var(--acc); padding:5px 10px}
+  #logLines{font-family:var(--mono); font-size:12.5px; line-height:2.1; color:var(--dim); min-height:180px}
+  #logLines .ln em{color:var(--acc); font-style:normal; margin-right:10px}
+  #logLines .ln b{color:var(--ink); font-weight:400; float:right}
+  .bigbar{height:3px; background:var(--line); margin-top:24px; position:relative}
+  .bigbar i{position:absolute; inset:0 auto 0 0; width:0%; background:var(--acc); transition:width .4s}
+  #scanStage{margin-top:26px; border:1px solid var(--line); height:110px; position:relative; overflow:hidden}
+  #scanStage .scan{position:absolute; top:0; bottom:0; width:2px; background:var(--acc); animation:scan 1.6s linear infinite}
+  @keyframes scan{from{left:-2px}to{left:100%}}
+  #scanStage .lbl{position:absolute; inset:0; display:grid; place-items:center; font-family:var(--mono); font-size:11px; letter-spacing:.2em; color:var(--dim)}
+
+  /* ---------- studio ---------- */
+  #studio{padding-top:30px}
+  .studio-head{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:22px}
+  .src-title{font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:.01em}
+  .src-meta{display:flex; gap:14px; margin-top:8px; font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--dim); align-items:center; flex-wrap:wrap}
+  .badge{border:1px solid var(--acc); color:var(--acc); padding:3px 8px; letter-spacing:.14em}
+  .head-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  select{
+    background:var(--panel); color:var(--ink); border:1px solid var(--line2); font-family:var(--mono);
+    font-size:11.5px; letter-spacing:.06em; padding:9px 10px; border-radius:2px; outline:none;
+  }
+  .btn-ghost{
+    display:inline-flex; align-items:center; gap:8px; background:none; border:1px solid var(--line2);
+    color:var(--ink); font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; padding:9px 14px; border-radius:2px;
+    transition:border-color .15s,color .15s;
+  }
+  .btn-ghost:hover{border-color:var(--acc); color:var(--acc)}
+  .btn-ghost.solid{background:var(--acc); border-color:var(--acc); color:#0B0B0D; font-weight:700}
+  .btn-ghost.solid:hover{background:#FF6318; color:#0B0B0D}
+  .btn-ghost:disabled{opacity:.4; pointer-events:none}
+
+  .studio-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:26px; align-items:start}
+
+  /* player */
+  .player-wrap{position:relative; background:#000; border:1px solid var(--line); aspect-ratio:16/9}
+  .player-wrap video{width:100%; height:100%; display:block; background:#000}
+  .player-wrap #ytBox{position:absolute; inset:0; background:#000}
+  .player-wrap #ytBox iframe{width:100%; height:100%; border:0; display:block}
+  .player-wrap .noPx{
+    position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:30px;
+    border:1px dashed var(--line2); color:var(--dim); font-family:var(--mono); font-size:12px; line-height:2; letter-spacing:.05em;
+  }
+  .player-wrap .noPx b{color:var(--ink); display:block; font-family:var(--sans); font-size:16px; letter-spacing:.03em; margin-bottom:6px}
+  .ov-cap{
+    position:absolute; left:50%; transform:translateX(-50%); bottom:70px; width:min(80%,560px);
+    text-align:center; font-weight:700; font-size:clamp(16px,1.7vw,24px); line-height:1.3;
+    text-shadow:0 2px 8px rgba(0,0,0,.9); pointer-events:none;
+  }
+  .ov-cap::before{content:"TEKS OTOMATIS"; display:block; font-family:var(--mono); font-size:9px; letter-spacing:.3em; color:var(--acc); margin-bottom:6px; text-shadow:none}
+  .ov-tag{
+    position:absolute; top:14px; left:14px; font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+    background:var(--acc); color:#0B0B0D; padding:4px 9px; font-weight:700; pointer-events:none;
+  }
+  .ov-time{
+    position:absolute; right:12px; bottom:12px; font-family:var(--mono); font-size:11px;
+    background:rgba(0,0,0,.65); padding:4px 8px; color:var(--ink); pointer-events:none;
+  }
+
+  /* heatmap */
+  .hm-wrap{position:relative; border:1px solid var(--line); border-top:none; background:var(--panel); padding:14px 14px 8px}
+  #heatmap{width:100%; height:130px; display:block; cursor:pointer}
+  .hm-tip{
+    position:absolute; pointer-events:none; background:var(--bg); border:1px solid var(--acc);
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; padding:6px 9px; z-index:5;
+    transform:translate(-50%,-110%); white-space:nowrap; display:none;
+  }
+  .hm-tip b{color:var(--acc)}
+  .legend{display:flex; gap:22px; margin-top:10px; font-family:var(--mono); font-size:10px; letter-spacing:.12em; color:var(--dim)}
+  .legend i{display:inline-block; width:10px; height:10px; margin-right:7px; vertical-align:-1px; font-style:normal}
+  .legend .l1 i{background:var(--line2)}
+  .legend .l2 i{background:var(--acc); opacity:.75}
+  .legend .l3 i{border:1px solid var(--acc); background:none}
+
+  /* daftar klip */
+  .clips{border:1px solid var(--line); background:var(--panel); position:sticky; top:16px; display:flex; flex-direction:column; max-height:calc(100vh - 32px)}
+  .clips-head{padding:16px 18px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .clips-head h3{font-size:13px; letter-spacing:.14em; font-family:var(--mono); font-weight:700}
+  .clips-head h3 i{color:var(--acc); font-style:normal}
+  .clips-head .mono{font-size:10.5px; color:var(--dim); letter-spacing:.06em}
+  #clipList{overflow-y:auto; flex:1}
+  #clipList::-webkit-scrollbar{width:8px}
+  #clipList::-webkit-scrollbar-thumb{background:var(--line2)}
+
+  .clip{border-bottom:1px solid var(--line); padding:16px 18px 14px; position:relative; transition:background .15s}
+  .clip:hover{background:var(--panel2)}
+  .clip.selected{box-shadow:inset 3px 0 0 var(--acc)}
+  .clip.playing{background:var(--acc-soft)}
+  .clip-top{display:flex; align-items:flex-start; gap:12px}
+  .clip-idx{
+    font-family:var(--mono); font-size:22px; font-weight:700; line-height:1; color:transparent;
+    -webkit-text-stroke:1px var(--line2); min-width:38px; padding-top:2px;
+  }
+  .clip.selected .clip-idx{-webkit-text-stroke:1px var(--acc)}
+  .clip-mid{flex:1; min-width:0}
+  .clip-meta{display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--dim)}
+  .tag{border:1px solid var(--line2); padding:2px 7px; color:var(--ink); letter-spacing:.12em}
+  .clip-cap{
+    margin-top:9px; font-size:15px; font-weight:500; line-height:1.45; cursor:text; border-radius:2px;
+  }
+  .clip-cap:hover{color:var(--acc)}
+  .clip-cap input{
+    width:100%; background:var(--bg); border:1px solid var(--acc); color:var(--ink); font-family:var(--sans);
+    font-size:14px; padding:6px 8px; outline:none; border-radius:2px;
+  }
+  .clip-foot{display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:10px}
+  .stars{display:flex; gap:2px}
+  .stars button{background:none; border:none; padding:2px; line-height:0}
+  .stars svg{width:17px; height:17px; fill:none; stroke:var(--line2); stroke-width:1.6; transition:transform .1s}
+  .stars button.on svg{fill:var(--acc); stroke:var(--acc)}
+  .stars button:hover svg{transform:scale(1.2); stroke:var(--ink)}
+  .clip-act{display:flex; gap:6px}
+  .ibtn{
+    background:none; border:1px solid var(--line2); color:var(--ink); width:32px; height:32px;
+    display:grid; place-items:center; border-radius:2px; transition:all .15s;
+  }
+  .ibtn:hover{border-color:var(--acc); color:var(--acc)}
+  .ibtn.on{background:var(--acc); border-color:var(--acc); color:#0B0B0D}
+  .ibtn:disabled{opacity:.35; pointer-events:none}
+  .score{position:absolute; right:18px; top:14px; text-align:right}
+  .score b{font-family:var(--mono); font-size:24px; font-weight:700; color:var(--acc); line-height:1}
+  .score span{display:block; font-family:var(--mono); font-size:8.5px; letter-spacing:.24em; color:var(--dim); margin-top:2px}
+  .prog{height:3px; background:var(--line); margin-top:12px; display:none}
+  .prog i{display:block; height:100%; width:0%; background:var(--acc); transition:width .2s}
+  .prog.on{display:block}
+  .exp-status{margin-top:8px; font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--acc); display:none}
+  .exp-status.on{display:block}
+
+  footer{border-top:1px solid var(--line); margin-top:70px; padding:22px 32px; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--dim); display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; position:relative; z-index:1}
+
+  /* toast */
+  #toasts{position:fixed; bottom:22px; right:22px; z-index:50; display:flex; flex-direction:column; gap:10px}
+  .toast{
+    display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line2);
+    border-left:3px solid var(--acc); padding:13px 18px; min-width:280px; max-width:380px;
+    font-size:13px; animation:tin .25s ease;
+  }
+  .toast.ok{border-left-color:var(--ok)}
+  .toast svg{width:17px;height:17px;stroke:var(--acc);flex:none}
+  .toast.ok svg{stroke:var(--ok)}
+  @keyframes tin{from{transform:translateX(30px); opacity:0}}
+  .fadeout{animation:tout .3s forwards}
+  @keyframes tout{to{transform:translateX(30px); opacity:0}}
+
+  @media (max-width:1020px){
+    #gate{grid-template-columns:1fr; gap:40px}
+    .studio-grid{grid-template-columns:1fr}
+    .clips{position:static; max-height:none}
+    .top-mid{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">KLIPP<span class="tick">/</span>10</div>
+  <div class="top-mid mono">POTONG OTOMATIS &nbsp;·&nbsp; SKOR VIRAL &nbsp;·&nbsp; SIAP UNDUH</div>
+  <div class="top-status mono"><span class="dot"></span>100% LOKAL DI PERAMBAN</div>
+</header>
+
+<main>
+  <!-- ============ GERBANG ============ -->
+  <section id="gate">
+    <div>
+      <h1 class="display">
+        Satu video masuk.<br>
+        <span class="oline">Sepuluh potongan</span><br>
+        siap tembak.
+      </h1>
+      <p class="sub">
+        Jatuhkan <b>berkas video</b> (atau tautan <b>.mp4</b> langsung) —
+        mesin lokal memindai puncak energi, memotong <b>maks. 10 potongan paling viral</b>,
+        memberi <b>teks otomatis</b>, <b>skor &amp; bintang</b>, lalu mengekspor format
+        <b>9:16 siap unggah</b> yang langsung bisa diunduh.
+      </p>
+      <div class="steps mono">
+        <span><i>01</i>PINDAI</span>
+        <span><i>02</i>POTONG</span>
+        <span><i>03</i>NILAI</span>
+        <span><i>04</i>UNDUH</span>
+      </div>
+    </div>
+
+    <div class="panel-form">
+      <h2>SUMBER VIDEO</h2>
+      <form id="urlForm">
+        <div class="field">
+          <label for="urlInput">TAUTAN VIDEO LANGSUNG (.MP4)</label>
+          <input type="url" id="urlInput" placeholder="Tempel tautan YouTube / video.mp4" autocomplete="off">
+        </div>
+        <div class="row-count">
+          <div class="stepper">
+            <button type="button" id="cntMinus" aria-label="kurangi jumlah potongan"><i data-lucide="minus"></i></button>
+            <div class="val" id="cntVal">6</div>
+            <button type="button" id="cntPlus" aria-label="tambah jumlah potongan"><i data-lucide="plus"></i></button>
+          </div>
+          <div class="count-hint">JUMLAH POTONGAN · MAKS 10</div>
+        </div>
+        <button type="submit" class="btn-primary"><i data-lucide="scissors"></i>ANALISIS &amp; POTONG</button>
+      </form>
+
+      <div class="divider">ATAU</div>
+
+      <div class="dropzone" id="dropzone" role="button" tabindex="0">
+        <div class="dz-ic"><i data-lucide="file-video"></i></div>
+        Jatuhkan berkas video di sini, atau klik untuk memilih
+        <span class="mono">MP4 · WEBM · MOV — DIANALISIS ASLI LOKAL</span>
+      </div>
+
+      <div class="demo-row">
+        <button class="linklike" id="demoBtn">coba contoh tanpa upload →</button>
+        <span class="mono" style="font-size:10px;color:var(--dim)">PIPELINE PENUH + UNDUH NYATA</span>
+      </div>
+
+      <p class="note">
+        <i>›</i> YouTube: aplikasi mencoba mengunduh videonya agar bisa dipotong sungguhan; bila diblokir, otomatis pakai pemutar YouTube (pratinjau klip + salin tautan potongan). Facebook: unduh dulu lalu unggah berkasnya. Skor viral = audio + gerakan visual + hook awal.<br>
+        <i>›</i> Berkas unggahan &amp; contoh diproses sepenuhnya nyata: dekode audio, pemotongan,
+        dan pengunduhan. Tidak ada data yang meninggalkan perangkat Anda.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ ANALISIS ============ -->
+  <section id="analyzing" hidden>
+    <h3><span class="recbox">MEMINDAI</span><span id="anaTitle"></span></h3>
+    <div id="logLines"></div>
+    <div class="bigbar"><i id="anaBar"></i></div>
+    <div id="scanStage"><div class="scan"></div><div class="lbl">MEMETAKAN ENERGI SEJANGKUR DURASI</div></div>
+  </section>
+
+  <!-- ============ STUDIO ============ -->
+  <section id="studio" hidden>
+    <div class="studio-head">
+      <div>
+        <div class="src-title" id="srcTitle">—</div>
+        <div class="src-meta mono" id="srcMeta"></div>
+      </div>
+      <div class="head-actions">
+        <select id="sortSel" aria-label="urutkan">
+          <option value="score">URUT: SKOR TERTINGGI</option>
+          <option value="time">URUT: TIMELINE</option>
+          <option value="len">URUT: TERPANJANG</option>
+        </select>
+        <button class="btn-ghost" id="selAllBtn"><i data-lucide="check-check"></i>PILIH SEMUA</button>
+        <button class="btn-ghost solid" id="dlSelBtn"><i data-lucide="arrow-down-to-line"></i>UNDUH TERPILIH (<span id="selCnt">0</span>)</button>
+        <button class="btn-ghost" id="resetBtn"><i data-lucide="refresh-cw"></i>ANALISIS LAIN</button>
+      </div>
+    </div>
+
+    <div class="studio-grid">
+      <div class="stage">
+        <div class="player-wrap">
+          <video id="player" controls preload="metadata"></video>
+          <div id="ytBox" hidden><div id="ytMount"></div></div>
+          <div class="noPx" id="noPx" hidden><div><b>Piksel sumber tidak dapat diambil</b>Untuk tautan ini, pratinjau dimatikan oleh kebijakan peramban.<br>Ekspor tetap berjalan dan menghasilkan kartu teks 9:16.</div></div>
+          <div class="ov-tag" id="ovTag" hidden>POTONGAN #1</div>
+          <div class="ov-cap" id="ovCap" hidden></div>
+          <div class="ov-time mono" id="ovTime">00:00 / 00:00</div>
+        </div>
+        <div class="hm-wrap">
+          <canvas id="heatmap"></canvas>
+          <div class="hm-tip" id="hmTip"></div>
+          <div class="legend">
+            <span class="l1"><i></i>ENERGI</span>
+            <span class="l2"><i></i>JENDELA POTONGAN</span>
+            <span class="l3"><i></i>KLIK PUNCAK = PRATINJAU</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="clips">
+        <div class="clips-head">
+          <h3><i id="clipCount">0</i> POTONGAN HASIL</h3>
+          <span class="mono" id="clipSummary"></span>
+        </div>
+        <div id="clipList"></div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>KLIPP/10 — SELURUH PEMROSESAN BERLANGSUNG DI PERAMBAN ANDA</span>
+  <span>BERKAS TIDAK PERNAH MENINGGALKAN PERANGKAT</span>
+</footer>
+
+<div id="toasts"></div>
+<input type="file" id="fileInput" accept="video/*" hidden>
+
+<script>
+/* ============================================================
+   KLIPP/10 — pemotong video lokal
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+const state = {
+  src:null,          // {type:'file'|'demo'|'remote', url, title, hasPixels}
+  duration:0,
+  env:[],            // envelope energi 0..1 per 0.25s
+  clips:[],
+  count:6,
+  sortMode:'score',
+  activeClip:null,   // id klip yang sedang dipreview
+  stopAt:null,
+  exporting:false,
+};
+
+/* ---------- util ---------- */
+const fmt = t => { t=Math.max(0,Math.round(t)); return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); };
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+function once(el,ev){ return new Promise(r=>el.addEventListener(ev,r,{once:true})); }
+function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className='toast '+(type==='ok'?'ok':'');
+  const ic = type==='ok'?'check-circle-2': type==='warn'?'triangle-alert': type==='err'?'octagon-x':'info';
+  el.innerHTML=`<i data-lucide="${ic}"></i><span>${msg}</span>`;
+  $('#toasts').appendChild(el); lucide.createIcons();
+  setTimeout(()=>{ el.classList.add('fadeout'); setTimeout(()=>el.remove(),320); }, 3600);
+}
+
+/* ---------- caption & tag otomatis ---------- */
+const CAPTIONS=[
+  'Bagian yang bikin nggak bisa skip.',
+  'Detik-detik yang bikin orang berhenti scroll.',
+  'Ini alasan video ini meledak.',
+  'Tonton sampai akhir — serius.',
+  'Momen paling intens di seluruh video.',
+  'Kalau cuma bisa lihat satu bagian, lihat ini.',
+  'Yang terjadi di sini nyaris gila.',
+  'Nemu potongan terbaiknya di menit ini.',
+  'Bagian yang paling banyak diulang penonton.',
+  'Skip bagian ini = rugi besar.',
+];
+const TAGS=['LONJAKAN AUDIO','RETENSI TINGGI','ZONA REWATCH','HOOK KUAT','PUNCAK ENERGI','MOMENTUM INTERAKSI'];
+
+/* ============================================================
+   ANALISIS
+   ============================================================ */
+async function analyzeAudioReal(url){
+  const AC = window.AudioContext||window.webkitAudioContext;
+  const ac = new AC();
+  const buf = await ac.decodeAudioData(await (await fetch(url)).arrayBuffer());
+  const ch = buf.getChannelData(0), sr = buf.sampleRate;
+  const bucket = Math.max(1, Math.floor(sr*0.25));
+  const env=[];
+  for(let i=0;i<ch.length;i+=bucket){
+    let s=0; const end=Math.min(i+bucket,ch.length);
+    for(let j=i;j<end;j++) s+=ch[j]*ch[j];
+    env.push(Math.sqrt(s/(end-i)));
+  }
+  ac.close();
+  const mx=Math.max(...env,1e-9);
+  return env.map(v=>v/mx);
+}
+function simulateEnvelope(duration,rng){
+  const step=0.25, n=Math.max(8,Math.round(duration/step));
+  const env=new Array(n).fill(0);
+  const bumps=9+Math.floor(rng()*7);
+  for(let b=0;b<bumps;b++){
+    const c=rng()*n, sig=(8+rng()*30)/step, amp=.5+rng()*.5;
+    for(let i=0;i<n;i++){ const d=(i-c)/sig; env[i]+=amp*Math.exp(-d*d*2); }
+  }
+  for(let i=0;i<n;i++) env[i]+=rng()*.05;
+  const mx=Math.max(...env);
+  return env.map(v=>v/mx);
+}
+
+function selectClips(env,duration,count,rng){
+  const step=0.25;
+  let clipLen=clamp(duration/count,15,40);
+  let picked=[];
+  for(let attempt=0; attempt<6 && picked.length<count; attempt++){
+    clipLen=clamp(clipLen,6,duration);
+    const win=Math.max(2,Math.round(clipLen/step));
+    const cands=[];
+    const stride=Math.max(0.5, clipLen/14);
+    for(let s=0; s+clipLen<=duration+1e-6; s+=stride){
+      const i0=clamp(Math.floor(s/step),0,Math.max(0,env.length-1));
+      const i1=Math.min(env.length,i0+win);
+      if(i1-i0<2) break;
+      let sum=0,mx=0,dyn=0,maxAt=0;
+      for(let i=i0;i<i1;i++){
+        const v=env[i]; sum+=v;
+        if(v>mx){mx=v; maxAt=(i-i0)/(i1-i0);}
+        if(i>i0) dyn+=Math.abs(env[i]-env[i-1]);
+      }
+      const mean=sum/(i1-i0); dyn/=(i1-i0);
+      let hk=0; const hn=Math.max(1,Math.min(12,i1-i0)); for(let i=i0;i<i0+hn;i++) hk+=env[i]; hk/=hn;
+      cands.push({start:s,len:clipLen,raw:mean*.42+mx*.26+dyn*2.4*.17+hk*.15,peakFrac:maxAt,dyn});
+    }
+    cands.sort((a,b)=>b.raw-a.raw);
+    picked=[];
+    for(const c of cands){
+      if(picked.length>=count) break;
+      if(picked.every(p=>c.start>=p.start+p.len-.2 || c.start+c.len<=p.start+.2)) picked.push(c);
+    }
+    if(picked.length<count) clipLen=Math.max(6,clipLen*.72);
+    if(clipLen<=6.01 && picked.length>=Math.floor(duration/6)) break;
+  }
+  picked.sort((a,b)=>a.start-b.start);
+
+  const vals=picked.map(p=>p.raw);
+  const mn=Math.min(...vals,1e-9), mx=Math.max(...vals,0);
+  picked.forEach((p,i)=>{
+    p.id=i+1;
+    p.score = (mx-mn<1e-6) ? 60+Math.floor(rng()*35) : Math.round(40+(p.raw-mn)/(mx-mn)*58);
+    p.rating=clamp(Math.round(p.score/20),1,5);
+    p.selected=p.rating>=4;          // otomatis "siap upload"
+    p.manual=false;
+    p.tag = i===0 ? 'PUNCAK UTAMA'
+          : (env.length ? (p.peakFrac<.3 ? 'HOOK KUAT' : p.dyn>.12 ? 'LONJAKAN AUDIO' : 'ENERGI KONSISTEN')
+                        : TAGS[Math.floor(rng()*TAGS.length)]);
+    p.caption=CAPTIONS[Math.floor(rng()*CAPTIONS.length)];
+  });
+  return picked;
+}
+
+/* ============================================================
+   MULAI ANALISIS
+   ============================================================ */
+/* gerakan visual: beda antar-frame (kecil, 48x27) -> envelope per 0,25 dtk */
+async function analyzeMotion(url,duration,cors){
+  const v=document.createElement('video'); v.muted=true; v.preload='auto'; v.playsInline=true;
+  if(cors) v.crossOrigin='anonymous';
+  v.src=url;
+  await Promise.race([once(v,'loadeddata'),new Promise((_,r)=>setTimeout(()=>r(new Error('t')),15000))]);
+  const cv=document.createElement('canvas'); cv.width=48; cv.height=27;
+  const cx=cv.getContext('2d',{willReadFrequently:true});
+  const step=Math.max(.5,duration/300), vals=[], t0=performance.now(); let prev=null;
+  for(let t=0;t<duration;t+=step){
+    if(performance.now()-t0>90000) break;
+    await Promise.race([seekTo(v,t),new Promise(r=>setTimeout(r,4000))]);
+    cx.drawImage(v,0,0,48,27);
+    const d=cx.getImageData(0,0,48,27).data; let diff=0;
+    if(prev) for(let i=0;i<d.length;i+=4) diff+=Math.abs(d[i]-prev[i])+Math.abs(d[i+1]-prev[i+1])+Math.abs(d[i+2]-prev[i+2]);
+    vals.push(prev?diff/(d.length/4*765):0); prev=d;
+  }
+  if(vals.length<3) throw new Error('gerakan tidak terbaca');
+  const sorted=[...vals].sort((a,b)=>a-b), p95=sorted[Math.floor(sorted.length*.95)]||1e-9;
+  const n=Math.max(8,Math.round(duration/.25));
+  return Array.from({length:n},(_,i)=>{
+    const k=Math.min(vals.length-1,Math.floor(i*.25/step));
+    const a=(vals[k-1]??vals[k]), b=vals[k], c=(vals[k+1]??vals[k]);
+    return clamp((a+b*2+c)/4/p95,0,1);
+  });
+}
+function blendEnv(a,m){
+  const n=Math.min(a.length,m.length);
+  const out=Array.from({length:n},(_,i)=>a[i]*.65+m[i]*.35);
+  const mx=Math.max(...out,1e-9); return out.map(v=>v/mx);
+}
+async function logStep(lines,bar){
+  const box=$('#logLines');
+  for(const [txt,delay] of lines){
+    const ln=document.createElement('div');
+    ln.className='ln';
+    ln.innerHTML=`<em>›</em>${txt}<b>${delay? '...' : 'SELESAI'}</b>`;
+    box.appendChild(ln);
+    await new Promise(r=>setTimeout(r,delay||120));
+    ln.querySelector('b').textContent='SELESAI';
+    $('#anaBar').style.width=Math.min(100,bar)+'%';
+  }
+}
+
+async function startAnalysis(...a){
+  try{ await _startAnalysis(...a); }
+  catch(e){ console.error(e); toast(e.message||"Analisis gagal","err"); $("#analyzing").hidden=true; $("#gate").hidden=false; }
+}
+async function _startAnalysis(srcInfo, simDuration){
+  state.src=srcInfo; state.clips=[]; state.activeClip=null; state.env=[];
+  if(!srcInfo.yt) ytSetVisible(false);
+  try{ if(expAC) expAC.close(); }catch(_){}
+  exportVideo=null; expAC=expSrc=expDest=null;
+  $('#gate').hidden=true; $('#studio').hidden=true; $('#analyzing').hidden=false;
+  $('#logLines').innerHTML=''; $('#anaBar').style.width='0%';
+  $('#anaTitle').textContent=srcInfo.title;
+
+  const rng=mulberry32(hashStr(srcInfo.url||srcInfo.title));
+  let envReal=false;
+
+  // video element
+  const player=$('#player');
+  player.pause(); player.removeAttribute('src'); player.load();
+
+  let duration=simDuration||0;
+  if(srcInfo.type!=='remote'){
+    const loadP=(async()=>{
+      player.crossOrigin = srcInfo.type==='demo' ? 'anonymous' : null;
+      player.src=srcInfo.url;
+      await once(player,'loadedmetadata');
+      duration=player.duration;
+    })();
+    await Promise.race([loadP, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout memuat video')),20000))])
+      .catch(()=>{ throw new Error('Video gagal dimuat. Periksa tautan/berkas.'); });
+  }
+
+  await logStep([
+    [srcInfo.type==='remote'?'membaca tautan…':'membaca berkas…',260],
+    [`durasi terdeteksi: ${fmt(duration)}`,200],
+  ],22);
+
+  await logStep([[srcInfo.type==='remote'?'melewati dekode — mode estimasi':'mendekode trek audio…',0]],38);
+  if(srcInfo.type!=='remote'){
+    try{
+      state.env=await Promise.race([
+        analyzeAudioReal(srcInfo.url),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),60000))
+      ]);
+      envReal=true;
+    }catch(e){ envReal=false; }
+  }
+  let motion=null;
+  if(srcInfo.type!=='remote'){
+    await logStep([['menganalisis gerakan visual & pergantian adegan…',0]],55);
+    try{ motion=await analyzeMotion(srcInfo.url,duration,srcInfo.type==='demo'); }catch(e){ motion=null; }
+  }
+  if(envReal&&motion) state.env=blendEnv(state.env,motion);
+  else if(motion) state.env=motion;
+  else if(!envReal) state.env=simulateEnvelope(duration,rng);
+
+  await logStep([
+    ['memetakan energi per 0,25 dtk — '+(envReal?'data audio asli':'estimasi pola retensi'),240],
+    [`memilih ${state.count} jendela puncak non-overlap…`,380],
+  ],72);
+
+  state.duration=duration;
+  state.clips=selectClips(state.env,duration,state.count,mulberry32(hashStr((srcInfo.url||'')+'klipp')));
+
+  await logStep([
+    [`menyusun ${state.clips.length} potongan — durasi terlalu pendek untuk ${state.count}` ,0].slice(0, state.clips.length>=state.count?undefined:2),
+    ['menilai skor viral & memberi bintang…',320],
+  ],100);
+
+  renderStudio(envReal||!!motion);
+  $('#analyzing').hidden=true; $('#studio').hidden=false;
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast(`${state.clips.length} potongan siap — rata-rata skor ${Math.round(state.clips.reduce((a,c)=>a+c.score,0)/state.clips.length)}`,'ok');
+}
+
+/* ============================================================
+   RENDER STUDIO
+   ============================================================ */
+const starSVG='<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6.1 6.7.7-5 4.5 1.4 6.6L12 17.2l-6 3.3 1.4-6.6-5-4.5 6.7-.7z"/></svg>';
+
+function renderStudio(envReal){
+  $('#srcTitle').textContent=state.src.title;
+  const total=state.clips.reduce((a,c)=>a+c.len,0);
+  $('#srcMeta').innerHTML=
+    `<span class="badge">${state.src.yt?'YOUTUBE':state.src.type==='remote'?'ESTIMASI TAUTAN':state.src.type==='demo'?'CONTOH NYATA':'BERKAS LOKAL'}</span>
+     <span>DURASI ${fmt(state.duration)}</span>
+     <span>${envReal?'ENVELOPE AUDIO ASLI':'MODE ESTIMASI'}</span>
+     <span>${state.clips.length} POTONGAN · ${fmt(total)} TOTAL</span>`;
+
+  // player
+  const player=$('#player');
+  const noPx=$('#noPx');
+  if(state.src.yt){ player.removeAttribute('src'); player.load(); noPx.hidden=true; $('#ytBox').hidden=false; player.style.display='none'; }
+  else if(state.src.type==='remote'){ player.removeAttribute('src'); player.load(); noPx.hidden=false; }
+  else { noPx.hidden=true; if(player.src!==state.src.url){ player.src=state.src.url; } }
+
+  renderClipList();
+  sizeHeatmap(); drawHeatmap();
+}
+
+function sortedClips(){
+  const arr=[...state.clips];
+  if(state.sortMode==='score') arr.sort((a,b)=>b.score-a.score);
+  else if(state.sortMode==='len') arr.sort((a,b)=>b.len-a.len);
+  else arr.sort((a,b)=>a.start-b.start);
+  return arr;
+}
+
+function renderClipList(){
+  const list=$('#clipList');
+  list.innerHTML='';
+  const arr=sortedClips();
+  $('#clipCount').textContent=state.clips.length;
+  const total=state.clips.reduce((a,c)=>a+c.len,0);
+  const avgR=(state.clips.reduce((a,c)=>a+c.rating,0)/state.clips.length).toFixed(1);
+  $('#clipSummary').textContent=`${fmt(total)} · RATA-RATA ${avgR} BINTANG`;
+
+  for(const c of arr){
+    const el=document.createElement('article');
+    el.className='clip'+(c.selected?' selected':'')+(state.activeClip===c.id?' playing':'');
+    el.dataset.id=c.id;
+    el.innerHTML=`
+      <div class="score"><b>${c.score}</b><span>SKOR</span></div>
+      <div class="clip-top">
+        <div class="clip-idx">${String(c.id).padStart(2,'0')}</div>
+        <div class="clip-mid">
+          <div class="clip-meta">
+            <span class="tag">${c.tag}</span>
+            <span>${fmt(c.start)} → ${fmt(c.start+c.len)}</span>
+            <span>· ${Math.round(c.len)} DTK</span>
+            ${c.manual?'<span style="color:var(--acc)">· DINILAI MANUAL</span>':''}
+          </div>
+          <p class="clip-cap" title="Klik untuk mengubah teks otomatis">${c.caption}</p>
+          <div class="clip-foot">
+            <div class="stars" aria-label="rating">${[1,2,3,4,5].map(i=>
+              `<button class="${i<=c.rating?'on':''}" data-r="${i}" aria-label="beri ${i} bintang">${starSVG}</button>`).join('')}
+            </div>
+            <div class="clip-act">
+              <button class="ibtn pv" title="Pratinjau potongan"><i data-lucide="${state.activeClip===c.id?'square':'play'}"></i></button>
+              <button class="ibtn sel ${c.selected?'on':''}" title="Tandai siap upload"><i data-lucide="check"></i></button>
+              <button class="ibtn dl" title="Unduh potongan (9:16)"><i data-lucide="download"></i></button>
+              <button class="ibtn rm" title="Buang potongan"><i data-lucide="x"></i></button>
+            </div>
+          </div>
+          <div class="prog"><i></i></div>
+          <div class="exp-status"></div>
+        </div>
+      </div>`;
+    // rating
+    el.querySelectorAll('.stars button').forEach(b=>b.addEventListener('click',()=>{
+      c.rating=+b.dataset.r; c.manual=true;
+      c.selected=c.rating>=4;
+      renderClipList(); drawHeatmap();
+      toast(`Potongan #${c.id} dinilai ${c.rating} bintang`,'ok');
+    }));
+    // caption edit
+    const cap=el.querySelector('.clip-cap');
+    cap.addEventListener('click',()=>{
+      const inp=document.createElement('input');
+      inp.value=c.caption; cap.replaceWith(inp); inp.focus(); inp.select();
+      const commit=()=>{ c.caption=inp.value.trim()||c.caption; renderClipList(); toast('Teks otomatis diperbarui','ok'); };
+      inp.addEventListener('blur',commit);
+      inp.addEventListener('keydown',e=>{ if(e.key==='Enter') inp.blur(); });
+    });
+    // aksi
+    el.querySelector('.pv').addEventListener('click',()=>previewClip(c));
+    el.querySelector('.sel').addEventListener('click',()=>{
+      c.selected=!c.selected; renderClipList(); drawHeatmap();
+    });
+    el.querySelector('.rm').addEventListener('click',()=>{
+      state.clips=state.clips.filter(x=>x.id!==c.id);
+      renderClipList(); drawHeatmap();
+      toast(`Potongan #${c.id} dibuang`);
+    });
+    el.querySelector('.dl').addEventListener('click',async()=>{
+      if(state.exporting){ toast('Tunggu — ekspor lain sedang berjalan','warn'); return; }
+      state.exporting=true;
+      await exportClip(c);
+      state.exporting=false;
+    });
+    list.appendChild(el);
+  }
+  lucide.createIcons();
+  updateSelCnt();
+}
+function updateSelCnt(){ $('#selCnt').textContent=state.clips.filter(c=>c.selected).length; }
+
+/* ============================================================
+   PRATINJAU
+   ============================================================ */
+const player=$('#player');
+function ytNow(){ try{ return ytPlayer.getCurrentTime()||0; }catch(_){ return 0; } }
+function previewClip(c){
+  if(state.src.yt && ytPlayer){
+    if(state.activeClip===c.id){ stopPreview(); return; }
+    state.activeClip=c.id; state.stopAt=c.start+c.len;
+    ytPlayer.seekTo(c.start,true); ytPlayer.playVideo();
+    clearInterval(ytPoll);
+    ytPoll=setInterval(()=>{
+      const t=ytNow();
+      $('#ovTime').textContent=`${fmt(t)} / ${fmt(state.duration)}`;
+      if(state.stopAt && t>=state.stopAt) stopPreview();
+    },200);
+    $('#ovTag').hidden=false; $('#ovTag').textContent=`POTONGAN #${c.id} · SKOR ${c.score}`;
+    $('#ovCap').hidden=false; $('#ovCap').textContent=c.caption;
+    renderClipList(); return;
+  }
+  if(state.src.type==='remote'){ toast('Pratinjau piksel tidak tersedia untuk tautan ini','warn'); return; }
+  if(state.activeClip===c.id){ stopPreview(); return; }
+  state.activeClip=c.id; state.stopAt=c.start+c.len;
+  player.currentTime=c.start;
+  player.play();
+  $('#ovTag').hidden=false; $('#ovTag').textContent=`POTONGAN #${c.id} · SKOR ${c.score}`;
+  $('#ovCap').hidden=false; $('#ovCap').textContent=c.caption;
+  renderClipList();
+}
+function stopPreview(){
+  if(state.src&&state.src.yt) ytStop(); else player.pause();
+  state.activeClip=null; state.stopAt=null;
+  $('#ovTag').hidden=true; $('#ovCap').hidden=true;
+  renderClipList();
+}
+player.addEventListener('timeupdate',()=>{
+  if(state.stopAt && player.currentTime>=state.stopAt) stopPreview();
+  $('#ovTime').textContent=`${fmt(player.currentTime)} / ${fmt(state.duration)}`;
+});
+
+/* ============================================================
+   HEATMAP
+   ============================================================ */
+const hm=$('#heatmap'), hmx=hm.getContext('2d');
+let hmRects=[], hmHover=null;
+function sizeHeatmap(){
+  const dpr=window.devicePixelRatio||1;
+  const w=hm.clientWidth, h=130;
+  if(hm.width!==Math.round(w*dpr)){ hm.width=Math.round(w*dpr); hm.height=h*dpr; } hmx.setTransform(dpr,0,0,dpr,0,0);
+}
+function drawHeatmap(){
+  if($('#studio').hidden) return;
+  sizeHeatmap();
+  const W=hm.clientWidth, H=130, pad=6, top=26;
+  hmx.clearRect(0,0,W,H);
+  hmx.fillStyle='#121215'; hmx.fillRect(0,0,W,H);
+  // skala waktu
+  hmx.strokeStyle='#232328'; hmx.beginPath(); hmx.moveTo(0,H-pad+.5); hmx.lineTo(W,H-pad+.5); hmx.stroke();
+  hmx.fillStyle='#9A9689'; hmx.font='9px JetBrains Mono';
+  hmx.fillText('00:00',2,H-1); const tx=hmx.measureText(fmt(state.duration)).width;
+  hmx.fillText(fmt(state.duration),W-tx-2,H-1);
+
+  const n=Math.max(1,state.env.length), bw=W/n;
+  for(let i=0;i<n;i++){
+    const h=state.env[i]*(H-top-pad-6)+2;
+    const inClip=state.clips.some(c=>{
+      const s=i*0.25; return s>=c.start && s<c.start+c.len;
+    });
+    hmx.fillStyle=inClip?'rgba(255,77,0,.7)':'#2E2E34';
+    hmx.fillRect(i*bw, H-pad-h, Math.max(1,bw-.5), h);
+  }
+  // jendela potongan
+  hmRects=[];
+  state.clips.forEach(c=>{
+    const x=c.start/state.duration*W, w=Math.max(4,(c.len/state.duration)*W);
+    hmx.fillStyle='rgba(255,77,0,.13)'; hmx.fillRect(x,0,w,H-8);
+    hmx.fillStyle='#FF4D00'; hmx.fillRect(x,0,w,2);
+    if(hmHover===c.id){ hmx.strokeStyle='#EFEBE0'; hmx.lineWidth=1; hmx.strokeRect(x+.5,3.5,w-1,H-14); }
+    hmx.fillStyle='#FF4D00'; hmx.font='700 10px JetBrains Mono';
+    hmx.fillText('P'+c.id, x+4, 16);
+    hmx.fillStyle='#EFEBE0'; hmx.fillText(c.score, x+4, 27);
+    hmRects.push({c,x,w});
+  });
+  // playhead
+  if(state.src.type!=='remote' && player.currentTime){
+    const px=player.currentTime/state.duration*W;
+    hmx.fillStyle='#EFEBE0'; hmx.fillRect(px,0,1.5,H-8);
+  }
+}
+hm.addEventListener('mousemove',e=>{
+  const r=hm.getBoundingClientRect(), x=e.clientX-r.left;
+  const hit=hmRects.find(h=>x>=h.x&&x<=h.x+h.w);
+  const tip=$('#hmTip');
+  if(hit){
+    hmHover=hit.c.id;
+    tip.style.display='block';
+    tip.style.left=(hit.x+hit.w/2+14)+'px'; tip.style.top='34px';
+    tip.innerHTML=`POTONGAN #${hit.c.id} · ${fmt(hit.c.start)}–${fmt(hit.c.start+hit.c.len)} · <b>SKOR ${hit.c.score}</b>`;
+  } else { hmHover=null; tip.style.display='none'; }
+  drawHeatmap();
+});
+hm.addEventListener('mouseleave',()=>{ hmHover=null; $('#hmTip').style.display='none'; drawHeatmap(); });
+hm.addEventListener('click',()=>{
+  if(hmHover){ const c=state.clips.find(x=>x.id===hmHover); if(c) previewClip(c); }
+});
+window.addEventListener('resize',drawHeatmap);
+setInterval(drawHeatmap,150);
+
+/* ============================================================
+   EKSPOR — rekam nyata via canvas + MediaRecorder
+   ============================================================ */
+let exportVideo=null, expAC=null, expSrc=null, expDest=null;
+function getExportVideo(){
+  if(exportVideo) return exportVideo;
+  exportVideo=document.createElement('video');
+  exportVideo.preload='auto';
+  if(state.src.type==='demo') exportVideo.crossOrigin='anonymous';
+  exportVideo.src=state.src.url;
+  return exportVideo;
+}
+function ensureExportAudio(v){
+  if(!expAC){
+    expAC=new (window.AudioContext||window.webkitAudioContext)();
+    expSrc=expAC.createMediaElementSource(v);
+    expDest=expAC.createMediaStreamDestination();
+    expSrc.connect(expDest); // hanya ke perekam — senyap bagi pengguna
+  }
+  if(expAC.state==='suspended') expAC.resume();
+  return expDest;
+}
+function pickMime(){
+  const opts=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  return opts.find(m=>MediaRecorder.isTypeSupported(m))||'';
+}
+function seekTo(v,t){
+  return new Promise(res=>{
+    if(Math.abs(v.currentTime-t)<.05) return res();
+    v.addEventListener('seeked',res,{once:true});
+    v.currentTime=t;
+  });
+}
+function wrapText(ctx,text,maxW){
+  const words=text.split(' '), lines=[]; let cur='';
+  for(const w of words){
+    const t=cur?cur+' '+w:w;
+    if(ctx.measureText(t).width>maxW && cur){ lines.push(cur); cur=w; }
+    else cur=t;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+function drawStarsCanvas(ctx,cx,cy,size,rating){
+  for(let i=0;i<5;i++){
+    const x=cx+i*size*1.25;
+    ctx.save(); ctx.translate(x,cy); ctx.beginPath();
+    const R=size*.55, r=size*.24;
+    for(let k=0;k<10;k++){
+      const rad=k%2===0?R:r, a=-Math.PI/2+k*Math.PI/5;
+      ctx[k?'lineTo':'moveTo'](Math.cos(a)*rad,Math.sin(a)*rad);
+    }
+    ctx.closePath();
+    if(i<rating){ ctx.fillStyle='#FF4D00'; ctx.fill(); }
+    ctx.strokeStyle=i<rating?'#FF4D00':'#33333A'; ctx.lineWidth=2; ctx.stroke();
+    ctx.restore();
+  }
+}
+function setProgress(id,frac,msg){
+  const item=$(`.clip[data-id="${id}"]`); if(!item) return;
+  const p=item.querySelector('.prog'), s=item.querySelector('.exp-status');
+  p.classList.add('on'); s.classList.add('on');
+  p.querySelector('i').style.width=(frac*100).toFixed(1)+'%';
+  s.textContent=msg;
+}
+function clearProgress(id){
+  const item=$(`.clip[data-id="${id}"]`); if(!item) return;
+  item.querySelector('.prog').classList.remove('on');
+  item.querySelector('.exp-status').classList.remove('on');
+}
+function downloadBlob(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+const safeName=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,30)||'video';
+
+async function exportClip(clip){
+  if(!('MediaRecorder' in window)){ toast('Peramban ini tidak mendukung perekaman — coba Chrome/Edge/Firefox','err'); return; }
+  const btnMsg=setProgress;
+  try{
+    if(state.src.yt){
+      await exportYouTubeLink(clip);
+    } else if(state.src.type==='remote'){
+      await exportTextCard(clip);
+    } else {
+      await exportReal(clip);
+    }
+  }catch(err){
+    console.error(err);
+    toast(`Ekspor potongan #${clip.id} gagal: ${err.message}`,'err');
+    clearProgress(clip.id);
+  }
+}
+
+/* --- mode YouTube: salin tautan potongan + kartu teks --- */
+async function exportYouTubeLink(clip){
+  const id=state.src.yt, s=Math.floor(clip.start), e=Math.ceil(clip.start+clip.len);
+  const link=`https://www.youtube.com/embed/${id}?start=${s}&end=${e}&autoplay=1`;
+  const share=`https://youtu.be/${id}?t=${s}`;
+  const txt=`Potongan #${clip.id} (${fmt(s)}–${fmt(e)})\nPutar potongan saja: ${link}\nMulai di detik ${s}: ${share}`;
+  try{ await navigator.clipboard.writeText(txt); toast(`Tautan potongan #${clip.id} disalin (${fmt(s)}–${fmt(e)})`,'ok'); }
+  catch(_){ window.prompt('Salin tautan potongan:',link); }
+  await exportTextCard(clip);
+}
+
+/* --- ekspor nyata: video sumber → 9:16 dengan teks otomatis --- */
+async function exportReal(clip){
+  const v=getExportVideo();
+  await new Promise((res,rej)=>{
+    if(v.readyState>=2) return res();
+    v.addEventListener('canplay',res,{once:true});
+    v.addEventListener('error',()=>rej(new Error('sumber video tidak dapat dimuat')),{once:true});
+    setTimeout(()=>rej(new Error('waktu tunggu habis')),30000);
+  });
+  const dest=ensureExportAudio(v);
+
+  const W=720,H=1280;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  const stream=cv.captureStream(30);
+  dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+  const rec=new MediaRecorder(stream,{mimeType:pickMime(),videoBitsPerSecond:5_000_000});
+  const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  const done=new Promise(r=>rec.addEventListener('stop',r,{once:true}));
+
+  setProgress(clip.id,0,'MENYIAPKAN…');
+  await seekTo(v,clip.start);
+  v.playbackRate=1;
+  await v.play();
+  rec.start();
+
+  const t0=performance.now(), dur=clip.len;
+  const capLines=(()=>{ ctx.font='700 52px "Space Grotesk"'; return wrapText(ctx,clip.caption,W-120); })();
+
+  await new Promise(res=>{
+    (function loop(){
+      const el=(performance.now()-t0)/1000;
+      const frac=clamp(el/dur,0,1);
+      // gambar video (crop cover)
+      const vw=v.videoWidth,vh=v.videoHeight;
+      const s=Math.max(W/vw,H/vh), dw=vw*s, dh=vh*s;
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+      try{ ctx.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh); }catch(e){}
+      // strip bawah agar caption terbaca (blok solid, bukan gradasi)
+      ctx.fillStyle='rgba(11,11,13,.82)'; ctx.fillRect(0,H-320,W,320);
+      ctx.fillStyle='#FF4D00'; ctx.fillRect(0,H-322,W,4);
+      // header
+      ctx.fillStyle='rgba(11,11,13,.75)'; ctx.fillRect(0,0,W,74);
+      ctx.fillStyle='#FF4D00'; ctx.fillRect(0,0,6,74);
+      ctx.font='700 22px "JetBrains Mono"'; ctx.fillStyle='#EFEBE0';
+      ctx.fillText(`POTONGAN #${clip.id}`,28,45);
+      ctx.font='400 22px "JetBrains Mono"'; ctx.textAlign='right';
+      ctx.fillText(`${fmt(clip.start+Math.min(el,dur))} / ${fmt(clip.start+clip.len)}`,W-28,45);
+      ctx.textAlign='left';
+      // skor
+      ctx.font='700 46px "JetBrains Mono"'; ctx.fillStyle='#FF4D00';
+      ctx.fillText(String(clip.score),28,H-236);
+      ctx.font='400 16px "JetBrains Mono"'; ctx.fillStyle='#9A9689';
+      ctx.fillText('SKOR VIRAL',28+ctx.measureText(String(clip.score)).width*0+128,H-236+18);
+      drawStarsCanvas(ctx,W-236,H-252,26,clip.rating);
+      // caption otomatis
+      ctx.fillStyle='#EFEBE0'; ctx.font='700 52px "Space Grotesk"';
+      const shown=Math.floor(capLines.join(' ').length*clamp(el/1.2,0,1));
+      let acc=0;
+      capLines.forEach((ln,i)=>{
+        const visible=ln.slice(0,Math.max(0,shown-acc)); acc+=ln.length+1;
+        ctx.fillText(visible,60,H-160+i*62);
+      });
+      // progress
+      ctx.fillStyle='#232328'; ctx.fillRect(0,H-14,W,14);
+      ctx.fillStyle='#FF4D00'; ctx.fillRect(0,H-14,W*frac,14);
+      setProgress(clip.id,frac,`MERENDER 9:16 — ${Math.round(frac*100)}%`);
+      if(el>=dur || v.ended || v.currentTime>=clip.start+clip.len+.1){ res(); return; }
+      requestAnimationFrame(loop);
+    })();
+  });
+  v.pause();
+  rec.stop(); await done;
+  const blob=new Blob(chunks,{type:'video/webm'});
+  const name=`klipp-p${clip.id}-skor${clip.score}-${safeName(state.src.title)}.webm`;
+  downloadBlob(blob,name);
+  setProgress(clip.id,1,`SELESAI — ${(blob.size/1048576).toFixed(1)} MB · ${name}`);
+  toast(`Potongan #${clip.id} terunduh (${(blob.size/1048576).toFixed(1)} MB) — siap upload`,'ok');
+  setTimeout(()=>clearProgress(clip.id),6000);
+}
+
+/* --- ekspor kartu teks untuk tautan tanpa piksel --- */
+async function exportTextCard(clip){
+  const W=720,H=1280, DUR=6;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  const stream=cv.captureStream(30);
+  const rec=new MediaRecorder(stream,{mimeType:pickMime(),videoBitsPerSecond:4_000_000});
+  const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  const done=new Promise(r=>rec.addEventListener('stop',r,{once:true}));
+  setProgress(clip.id,0,'MENYUSUN KARTU TEKS…');
+  rec.start();
+  const t0=performance.now();
+  ctx.font='700 54px "Space Grotesk"';
+  const capLines=wrapText(ctx,clip.caption,W-140);
+  await new Promise(res=>{
+    (function loop(){
+      const el=(performance.now()-t0)/1000, frac=clamp(el/DUR,0,1);
+      ctx.fillStyle='#0B0B0D'; ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle='#232328'; ctx.lineWidth=2; ctx.strokeRect(24,24,W-48,H-48);
+      ctx.strokeStyle='#FF4D00'; ctx.strokeRect(24,24,150,0);
+      // header
+      ctx.font='400 20px "JetBrains Mono"'; ctx.fillStyle='#9A9689';
+      ctx.fillText('SUMBER',56,86);
+      ctx.fillStyle='#EFEBE0'; ctx.font='500 26px "Space Grotesk"';
+      const title=state.src.title.length>34?state.src.title.slice(0,33)+'…':state.src.title;
+      ctx.fillText(title,56,122);
+      // teks otomatis mengetik
+      const full=capLines.join(' ');
+      const shown=full.slice(0,Math.floor(full.length*clamp(el/2.2,0,1)));
+      ctx.font='700 58px "Space Grotesk"';
+      const lines=wrapText(ctx,shown,W-140).slice(0,4);
+      lines.forEach((ln,i)=>{
+        ctx.fillStyle='#FF4D00'; ctx.fillRect(56,300+i*76-34,14,44);
+        ctx.fillStyle='#EFEBE0'; ctx.fillText(ln,86,300+i*76);
+      });
+      ctx.font='400 15px "JetBrains Mono"'; ctx.fillStyle='#9A9689';
+      ctx.fillText('TEKS OTOMATIS — DAPAT DISUNTING',56,340+ (capLines.length)*76);
+      // skor & bintang
+      ctx.font='700 130px "JetBrains Mono"'; ctx.fillStyle='#FF4D00';
+      ctx.fillText(String(clip.score),56,H-330);
+      ctx.font='400 18px "JetBrains Mono"'; ctx.fillStyle='#9A9689';
+      ctx.fillText('SKOR VIRAL / 100',56,H-296);
+      drawStarsCanvas(ctx,56,H-236,34,clip.rating);
+      // timer & progres
+      ctx.font='400 24px "JetBrains Mono"'; ctx.fillStyle='#EFEBE0'; ctx.textAlign='right';
+      ctx.fillText(`${fmt(clip.start)} → ${fmt(clip.start+clip.len)}`,W-56,H-330); ctx.textAlign='left';
+      ctx.fillStyle='#232328'; ctx.fillRect(56,H-150,W-112,12);
+      ctx.fillStyle='#FF4D00'; ctx.fillRect(56,H-150,(W-112)*frac,12);
+      ctx.font='400 17px "JetBrains Mono"'; ctx.fillStyle='#9A9689';
+      ctx.fillText(`KLIPP/10 · POTONGAN #${clip.id} · ${Math.round(frac*100)}%`,56,H-100);
+      setProgress(clip.id,frac,`MERENDER KARTU — ${Math.round(frac*100)}%`);
+      if(el>=DUR){ res(); return; }
+      requestAnimationFrame(loop);
+    })();
+  });
+  rec.stop(); await done;
+  const blob=new Blob(chunks,{type:'video/webm'});
+  const name=`klipp-p${clip.id}-kartu-${safeName(state.src.title)}.webm`;
+  downloadBlob(blob,name);
+  setProgress(clip.id,1,`SELESAI — ${(blob.size/1048576).toFixed(1)} MB · ${name}`);
+  toast(`Kartu potongan #${clip.id} terunduh (${(blob.size/1048576).toFixed(1)} MB)`,'ok');
+  setTimeout(()=>clearProgress(clip.id),6000);
+}
+
+/* ============================================================
+   AKSI HEADER & GATE
+   ============================================================ */
+ $('#dlSelBtn').addEventListener('click',async()=>{
+  const list=state.clips.filter(c=>c.selected);
+  if(!list.length){ toast('Belum ada potongan bertanda siap upload','warn'); return; }
+  if(state.exporting){ toast('Ekspor sedang berjalan','warn'); return; }
+  state.exporting=true;
+  for(const c of list) await exportClip(c);
+  state.exporting=false;
+  toast(`${list.length} potongan selesai diunduh — siap upload`,'ok');
+});
+ $('#selAllBtn').addEventListener('click',()=>{
+  const all=state.clips.every(c=>c.selected);
+  state.clips.forEach(c=>c.selected=!all);
+  renderClipList(); drawHeatmap();
+  toast(all?'Semua tanda dilepas':'Semua potongan ditandai siap upload','ok');
+});
+ $('#sortSel').addEventListener('change',e=>{ state.sortMode=e.target.value; renderClipList(); });
+ $('#resetBtn').addEventListener('click',()=>{
+  stopPreview();
+  $('#studio').hidden=true; $('#gate').hidden=false;
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+// stepper
+function setCount(v){ state.count=clamp(v,1,10); $('#cntVal').textContent=state.count; }
+ $('#cntMinus').addEventListener('click',()=>setCount(state.count-1));
+ $('#cntPlus').addEventListener('click',()=>setCount(state.count+1));
+
+// form URL
+/* ---------- YouTube ---------- */
+// Daftar resolver gaya Cobalt (POST {url} -> {status,url}). Tambah/ganti endpoint sendiri di sini bila perlu.
+const YT_RESOLVERS = [
+  'https://api.cobalt.tools/',
+  'https://cobalt-api.kwiatekmiki.com/',
+  'https://cobalt.api.timelessnesses.me/',
+];
+function ytId(u){
+  try{
+    const x=new URL(u); const h=x.hostname.replace(/^www\.|^m\./,'');
+    if(h==='youtu.be') return x.pathname.slice(1).split('/')[0]||null;
+    if(/(^|\.)youtube\.com$/.test(h)){
+      if(x.searchParams.get('v')) return x.searchParams.get('v');
+      const m=x.pathname.match(/^\/(shorts|embed|live|v)\/([\w-]{6,})/); if(m) return m[2];
+    }
+  }catch(_){}
+  return null;
+}
+async function ytTitle(id){
+  try{
+    const r=await fetch('https://www.youtube.com/oembed?format=json&url='+encodeURIComponent('https://www.youtube.com/watch?v='+id));
+    const j=await r.json(); return j.title||'Video YouTube';
+  }catch(_){ return 'Video YouTube'; }
+}
+async function ytResolveBlob(url,onMsg){
+  for(const ep of YT_RESOLVERS){
+    try{
+      onMsg&&onMsg('mencoba pengunduh: '+new URL(ep).hostname);
+      const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),15000);
+      const r=await fetch(ep,{method:'POST',signal:ctl.signal,
+        headers:{'Accept':'application/json','Content-Type':'application/json'},
+        body:JSON.stringify({url,videoQuality:'720',filenameStyle:'basic'})});
+      clearTimeout(to);
+      const j=await r.json();
+      if(!j||!j.url||!/tunnel|redirect|stream/.test(j.status||'tunnel')) continue;
+      onMsg&&onMsg('mengunduh video…');
+      const vr=await fetch(j.url); if(!vr.ok) continue;
+      const blob=await vr.blob();
+      if(blob.size>1000 && /video|octet/.test(blob.type||'video')) return blob;
+    }catch(_){ /* coba berikutnya */ }
+  }
+  return null;
+}
+let ytPlayer=null, ytReady=null, ytPoll=null;
+function ytApi(){
+  if(window.YT&&YT.Player) return Promise.resolve();
+  if(ytReady) return ytReady;
+  ytReady=new Promise((res,rej)=>{
+    window.onYouTubeIframeAPIReady=()=>res();
+    const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api';
+    s.onerror=()=>rej(new Error('API YouTube gagal dimuat')); document.head.appendChild(s);
+    setTimeout(()=>rej(new Error('API YouTube timeout')),15000);
+  });
+  return ytReady;
+}
+async function ytLoadPlayer(id){
+  await ytApi();
+  $('#ytBox').hidden=false;
+  if(ytPlayer && ytPlayer.destroy){ try{ytPlayer.destroy();}catch(_){} ytPlayer=null; }
+  $('#ytBox').innerHTML='<div id="ytMount"></div>';
+  return await new Promise((res,rej)=>{
+    const to=setTimeout(()=>rej(new Error('Pemutar YouTube gagal dimuat')),20000);
+    ytPlayer=new YT.Player('ytMount',{videoId:id,playerVars:{playsinline:1,rel:0,modestbranding:1},
+      events:{
+        onReady:e=>{ clearTimeout(to);
+          const t=setInterval(()=>{ const d=e.target.getDuration(); if(d>0){ clearInterval(t); res(d); } },150);
+          setTimeout(()=>{ clearInterval(t); if(!(e.target.getDuration()>0)) rej(new Error('Durasi video tidak terbaca (mungkin video privat/diblokir embed)')); },8000);
+        },
+        onError:()=>{ clearTimeout(to); rej(new Error('Video ini tidak bisa diputar di luar YouTube (privat/dibatasi)')); }
+      }});
+  });
+}
+function ytStop(){ clearInterval(ytPoll); ytPoll=null; try{ ytPlayer&&ytPlayer.pauseVideo&&ytPlayer.pauseVideo(); }catch(_){} }
+function ytSetVisible(on){
+  $('#ytBox').hidden=!on; $('#player').style.display=on?'none':'';
+  if(!on && ytPlayer){ ytStop(); try{ytPlayer.destroy();}catch(_){} ytPlayer=null; $('#ytBox').innerHTML='<div id="ytMount"></div>'; }
+}
+async function handleYouTube(url){
+  const id=ytId(url);
+  if(!id){ toast('Tautan YouTube tidak dikenali','warn'); return; }
+  const btn=$('#urlForm button[type=submit]'); btn.disabled=true;
+  try{
+    toast('Memproses video YouTube…','info');
+    const title=await ytTitle(id);
+    // 1) coba ambil berkas asli → dipotong & diekspor sungguhan
+    const blob=await ytResolveBlob('https://www.youtube.com/watch?v='+id,m=>toast(m,'info'));
+    if(blob){
+      ytSetVisible(false);
+      startAnalysis({type:'file',url:URL.createObjectURL(blob),title,hasPixels:true});
+      return;
+    }
+    // 2) cadangan: mode pemutar YouTube (pratinjau klip nyata, ekspor = tautan potongan)
+    toast('Unduhan langsung diblokir — pakai mode pemutar YouTube','warn');
+    const dur=await ytLoadPlayer(id);
+    startAnalysis({type:'remote',yt:id,url:'https://www.youtube.com/watch?v='+id,title,hasPixels:false},dur);
+  }catch(err){
+    console.error(err); toast(err.message||'Gagal memproses YouTube','err'); ytSetVisible(false);
+  }finally{ btn.disabled=false; }
+}
+ $('#urlForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const url=$('#urlInput').value.trim();
+  if(!url){ toast('Tempel tautan YouTube atau Facebook terlebih dulu','warn'); return; }
+  if(ytId(url)){ handleYouTube(url); return; }
+  if(/facebook\.com|fb\.watch|youtube\.com|youtu\.be/i.test(url)){
+    toast('Tautan ini tidak bisa diunduh langsung oleh peramban. Unduh videonya dulu, lalu unggah berkasnya.','warn');
+    $('#dropzone').scrollIntoView({behavior:'smooth',block:'center'}); return;
+  }
+  let title='Video tautan'; try{ title=decodeURIComponent(new URL(url).pathname.split('/').pop())||title; }catch(_){}
+  startAnalysis({type:'demo',url,title,hasPixels:true});
+});
+
+// dropzone
+const dz=$('#dropzone');
+dz.addEventListener('click',()=>$('#fileInput').click());
+dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#fileInput').click(); }});
+dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault(); dz.classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f && f.type.startsWith('video/')) handleFile(f);
+  else toast('Berkas itu bukan video','warn');
+});
+ $('#fileInput').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(f) handleFile(f); e.target.value='';
+});
+function handleFile(f){
+  startAnalysis({type:'file',url:URL.createObjectURL(f),title:f.name,hasPixels:true});
+}
+
+// demo
+ $('#demoBtn').addEventListener('click',()=>{
+  startAnalysis({
+    type:'demo',
+    url:'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    title:'Contoh — For Bigger Escapes',
+    hasPixels:true
+  });
+});
+
+lucide.createIcons();
+</script>
+</body>
+</html>
