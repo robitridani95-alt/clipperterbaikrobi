@@ -532,7 +532,7 @@
       </div>
 
       <div class="phone-col">
-        <div class="phone-head"><span>FRAME 9:16</span><b id="phoneInfo">—</b></div>
+        <div class="phone-head"><span id="phoneLbl">FRAME 9:16</span><b id="phoneInfo">—</b></div>
         <div class="phone"><div id="phoneYt" hidden></div><canvas id="phoneCv" width="405" height="720"></canvas></div>
         <div class="vol"><button type="button" class="ibtn" id="volBtn" title="Nyalakan / matikan suara"><i data-lucide="volume-2"></i></button><input type="range" id="volRng" min="0" max="100" value="100" aria-label="volume"><span class="mono" id="volVal">100%</span></div>
         <div class="ctl">
@@ -562,7 +562,9 @@
           <input type="range" id="logoSz" min="4" max="50" value="18" style="margin-top:8px" aria-label="ukuran logo">
           <div class="ctl-lbl">KEJELASAN LOGO · <span id="logoOpV">100%</span></div>
           <input type="range" id="logoOp" min="20" max="100" value="100">
-          <div class="ctl-lbl">BINGKAI 16:9 → 9:16</div>
+          <div class="ctl-lbl">RASIO FRAME VIDEO (PRATINJAU & EKSPOR)</div>
+          <div class="seg" id="ratioSeg"><button type="button" data-v="9:16">9:16 VERTIKAL</button><button type="button" data-v="16:9">16:9 LEBAR</button><button type="button" data-v="4:3">4:3</button></div>
+          <div class="ctl-lbl">ISI BINGKAI (SUMBER → FRAME)</div>
           <div class="seg" id="refSeg"><button type="button" data-v="crop">ISI (POTONG)</button><button type="button" data-v="fit">MUAT (LATAR BLUR)</button><button type="button" data-v="split">AUTO SPLIT 2–4 ORANG</button></div>
           <div class="note" style="margin-top:8px">AUTO SPLIT: kamera mendeteksi wajah & mulut. Saat 3 atau 4 orang berbicara/tertawa bersamaan, frame otomatis dibagi 3 atau 4 panel (tiap panel mengikuti satu orang); 2 orang = 2 panel; 1 orang = satu frame. Hanya untuk video yang diunggah (bukan tautan YouTube).</div>
           <div class="ctl-lbl">JUMLAH PANEL (AUTO SPLIT)</div>
@@ -648,7 +650,7 @@ const state = {
   activeClip:null,   // id klip yang sedang dipreview
   stopAt:null,
   exporting:false,
-  style:'sorot', titleFont:'playfair', titleColor:'gold', titleCustom:'#FFD36B', logo:null, logoPos:'tr', logoSize:18, titleScale:100, logoOp:100, capFont:'', capPx:0, capColor:'', pos:'bottom', reframe:'crop', splitN:'auto', focus:.5, ytCc:'off', info:false, autoNext:true, focusId:null, runId:0,
+  style:'sorot', titleFont:'playfair', titleColor:'gold', titleCustom:'#FFD36B', logo:null, logoPos:'tr', logoSize:18, titleScale:100, logoOp:100, capFont:'', capPx:0, capColor:'', pos:'bottom', reframe:'crop', ratio:'9:16', splitN:'auto', focus:.5, ytCc:'off', info:false, autoNext:true, focusId:null, runId:0,
   clipFocus:'all', feat:null, subMode:'auto', autoSplit:true, subLang:'indonesian', subModel:'base', autoSub:true, subBusy:false,
 };
 
@@ -760,11 +762,22 @@ function capStyleOf(key){
 function loadCapFonts(){ return Promise.all(['400 68px Anton','800 52px Poppins','500 36px "Space Grotesk"','400 20px "JetBrains Mono"','700 24px "JetBrains Mono"','800 52px Montserrat','400 52px "Bebas Neue"','400 52px Bangers','600 52px Oswald','800 52px "Playfair Display"','800 52px Inter','400 52px Lobster','400 52px "Permanent Marker"','800 52px "Roboto Slab"','italic 700 52px "Playfair Display"','italic 700 52px "Cormorant Garamond"','400 52px "DM Serif Display"','700 52px "Bodoni Moda"','700 52px Cinzel','800 52px Syne','600 52px Unbounded'].map(f=>document.fonts.load(f))).catch(()=>{}); }
 function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
+/* ruang koordinat bingkai (px logis = px ekspor): 9:16 · 16:9 · 4:3 */
+const FR={w:720,h:1280};
+const RATIOS={'9:16':{w:720,h:1280,cw:405,ch:720},'16:9':{w:1280,h:720,cw:640,ch:360},'4:3':{w:960,h:720,cw:600,ch:450}};
+function setRatio(r){
+  const R=RATIOS[r]||RATIOS['9:16']; state.ratio=RATIOS[r]?r:'9:16';
+  FR.w=R.w; FR.h=R.h;
+  const cv=$('#phoneCv'); if(cv){ cv.width=R.cw; cv.height=R.ch; }
+  const ph=document.querySelector('.phone'); if(ph) ph.style.aspectRatio=R.w+' / '+R.h;
+  const lb=$('#phoneLbl'); if(lb) lb.textContent='FRAME '+state.ratio;
+  if(typeof SPLIT!=='undefined') SPLIT.slots=[];
+}
 function drawCaption(ctx,text,st,pos,t,actO,topY){
   ctx.save(); ctx.font=`${st.w} ${st.z}px ${st.f}`; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.lineJoin='round';
   const words=(st.up?text.toUpperCase():text).split(/\s+/).filter(Boolean);
   if(!words.length){ ctx.restore(); return; }
-  const sp=ctx.measureText(' ').width, lh=Math.round(st.z*(st.bg?1.45:1.2)), maxW=620;
+  const sp=ctx.measureText(' ').width, lh=Math.round(st.z*(st.bg?1.45:1.2)), maxW=Math.min(620,FR.w*.86);
   const lines=[]; let cur=[], cw=0;
   for(const w of words){ const ww=ctx.measureText(w).width; if(cur.length&&cw+sp+ww>maxW){ lines.push(cur); cur=[]; cw=0; } cw+=(cur.length?sp:0)+ww; cur.push(w); }
   lines.push(cur);
@@ -773,10 +786,10 @@ function drawCaption(ctx,text,st,pos,t,actO,topY){
   const vis=live&&st.rev==='type'?Math.ceil(chars*clamp(t/1.3,0,1)):chars;
   const act=st.rev==='kar'?(actO!=null&&actO>=0?actO:(live?Math.floor(t/.32)%n:0)):-1;
   const bh=lines.length*lh;
-  let y=(pos==='top'?(topY||200):pos==='mid'?(1280-bh)/2:950-bh)+st.z, gi=0, cc=0;
+  let y=(pos==='top'?(topY||Math.round(FR.h*.156)):pos==='mid'?(FR.h-bh)/2:FR.h-330-bh)+st.z, gi=0, cc=0;
   for(const ln of lines){
     const ws=ln.map(w=>ctx.measureText(w).width), lw=ws.reduce((a,b)=>a+b,0)+sp*(ln.length-1);
-    let x=(720-lw)/2;
+    let x=(FR.w-lw)/2;
     if(st.bg && gi<shown && cc<vis){ ctx.fillStyle=st.bg; rr(ctx,x-18,y-st.z*.98,lw+36,st.z*1.3,10); ctx.fill(); }
     ln.forEach((w,i)=>{
       let k=w.length; if(st.rev==='pop') k=gi<shown?k:0; if(st.rev==='type') k=clamp(vis-cc,0,k);
@@ -909,10 +922,16 @@ function splitPick(now){
   return top.sort((a,b)=>a.cx-b.cx);
 }
 function splitRects(N){
-  if(N===2) return [[0,0,720,640],[0,640,720,640]];
-  if(N===3) return [[0,0,360,640],[360,0,360,640],[0,640,720,640]];
-  if(N===4) return [[0,0,360,640],[360,0,360,640],[0,640,360,640],[360,640,360,640]];
-  return [[0,0,720,1280]];
+  const W=FR.w,H=FR.h,hw=W/2,hh=H/2;
+  if(N<=1) return [[0,0,W,H]];
+  if(W>H){      // lanskap: berjajar menyamping
+    if(N===2) return [[0,0,hw,H],[hw,0,hw,H]];
+    if(N===3){ const t=W/3; return [[0,0,t,H],[t,0,t,H],[2*t,0,t,H]]; }
+    return [[0,0,hw,hh],[hw,0,hw,hh],[0,hh,hw,hh],[hw,hh,hw,hh]];
+  }
+  if(N===2) return [[0,0,W,hh],[0,hh,W,hh]];
+  if(N===3) return [[0,0,hw,hh],[hw,0,hw,hh],[0,hh,W,hh]];
+  return [[0,0,hw,hh],[hw,0,hw,hh],[0,hh,hw,hh],[hw,hh,hw,hh]];
 }
 function splitCrop(t,w,h,vw,vh){
   const a=w/h; let rh=t.fh*(a<.8?3.6:3.0), rw=rh*a;
@@ -929,7 +948,7 @@ function drawSplit(ctx,v,focus,k){
   splitTick(v,now);
   if(!SPLIT.lm) SPLIT.hud=SPLIT.failed?'MODEL GAGAL — cek internet, lalu pilih AUTO SPLIT lagi':'MEMUAT MODEL WAJAH…';
   const shown=SPLIT.lm?splitPick(now):[];
-  if(!shown.length){ if(SPLIT.lm) SPLIT.hud='TIDAK ADA WAJAH TERDETEKSI — bingkai ISI'; drawVideoCover(ctx,v,720,1280,'crop',focus,k); return; }
+  if(!shown.length){ if(SPLIT.lm) SPLIT.hud='TIDAK ADA WAJAH TERDETEKSI — bingkai ISI'; drawVideoCover(ctx,v,FR.w,FR.h,'crop',focus,k); return; }
   const N=shown.length, R=splitRects(N), dt=clamp((now-SPLIT.lastDraw)/1000,0,.1); SPLIT.lastDraw=now;
   if(SPLIT.slots.length!==N){ SPLIT.slots=[]; SPLIT.trans=1; }
   const al=1-Math.exp(-dt*7);
@@ -942,11 +961,10 @@ function drawSplit(ctx,v,focus,k){
     });
     if(N>=2){
       ctx.fillStyle='#0B0B0D';
-      if(N>=3&&N!==2) ctx.fillRect(357,0,6,N===3?640:1280);
-      ctx.fillRect(0,637,720,6);
+      R.forEach(([x,y,w,h])=>{ if(x>0) ctx.fillRect(x-3,y,w>0?6:0,h); if(y>0) ctx.fillRect(x,y-3,w,6); });
       shown.forEach((t,i)=>{ if(!t.on) return; const [x,y,w,h]=R[i]; ctx.strokeStyle='#FF4D00'; ctx.lineWidth=6; ctx.strokeRect(x+3,y+3,w-6,h-6); });
     }
-    if(SPLIT.trans>0){ ctx.fillStyle=`rgba(0,0,0,${SPLIT.trans*.5})`; ctx.fillRect(0,0,720,1280); SPLIT.trans=Math.max(0,SPLIT.trans-dt*4); }
+    if(SPLIT.trans>0){ ctx.fillStyle=`rgba(0,0,0,${SPLIT.trans*.5})`; ctx.fillRect(0,0,FR.w,FR.h); SPLIT.trans=Math.max(0,SPLIT.trans-dt*4); }
   }catch(e){}
 }
 function drawCard(ctx,o){
@@ -972,38 +990,38 @@ function drawInfoBar(ctx,c){
 function drawTitle(ctx,c,t){
   const text=String(c&&c.title||'').trim(); if(!text) return 0;
   const fo=TITLE_FONTS[state.titleFont]||TITLE_FONTS.playfair, co=titleColorOf();
-  const n=text.length, z=Math.max(16,Math.round((n<=22?76:n<=38?66:n<=56?56:48)*fo.s*state.titleScale/100)), lr=logoRect();
+  const n=text.length, z=Math.max(16,Math.round((n<=22?76:n<=38?66:n<=56?56:48)*fo.s*state.titleScale/100*(FR.w>FR.h?.8:1))), lr=logoRect(), cx0=FR.w/2;
   const a=isFinite(t)?clamp(t/.7,0,1):1, e=1-Math.pow(1-a,3);
   ctx.save();
   ctx.font=`${fo.it?'italic ':''}${fo.w} ${z}px ${fo.f}`; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
   if('letterSpacing' in ctx) ctx.letterSpacing=(fo.ls||0)+'px';
-  const words=(fo.up?text.toUpperCase():text).split(/\s+/).filter(Boolean), sp=ctx.measureText(' ').width, maxW=600;
+  const words=(fo.up?text.toUpperCase():text).split(/\s+/).filter(Boolean), sp=ctx.measureText(' ').width, maxW=Math.min(600,FR.w*.83);
   const lines=[]; let cur=[], cw=0;
   for(const w of words){ const ww=ctx.measureText(w).width; if(cur.length&&cw+sp+ww>maxW){ lines.push(cur.join(' ')); cur=[]; cw=0; } cw+=(cur.length?sp:0)+ww; cur.push(w); }
   if(cur.length) lines.push(cur.join(' '));
-  const lh=Math.round(z*1.16), top=lr&&lr.top?Math.max(128,lr.y+lr.h+44):128, y0=top+34+z, last=y0+(lines.length-1)*lh, bottom=last+Math.round(z*.3);
+  const lh=Math.round(z*1.16), HT=Math.round(FR.h*.1), top=lr&&lr.top?Math.max(HT,lr.y+lr.h+44):HT, y0=top+34+z, last=y0+(lines.length-1)*lh, bottom=last+Math.round(z*.3);
   ctx.globalAlpha=e;
   // lapisan gelap lembut di atas supaya judul terbaca
   const sg=ctx.createLinearGradient(0,0,0,bottom+90); sg.addColorStop(0,'rgba(0,0,0,.62)'); sg.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=sg; ctx.fillRect(0,0,720,bottom+90);
+  ctx.fillStyle=sg; ctx.fillRect(0,0,FR.w,bottom+90);
   ctx.translate(0,(1-e)*-16);
   // ornamen garis & berlian
   ctx.strokeStyle=co.acc; ctx.fillStyle=co.acc; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(250,top); ctx.lineTo(336,top); ctx.moveTo(384,top); ctx.lineTo(470,top); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(360,top-8); ctx.lineTo(368,top); ctx.lineTo(360,top+8); ctx.lineTo(352,top); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx0-110,top); ctx.lineTo(cx0-24,top); ctx.moveTo(cx0+24,top); ctx.lineTo(cx0+110,top); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx0,top-8); ctx.lineTo(cx0+8,top); ctx.lineTo(cx0,top+8); ctx.lineTo(cx0-8,top); ctx.closePath(); ctx.fill();
   // isi judul (gradasi logam)
   let fill; if(co.stops.length>1){ fill=ctx.createLinearGradient(0,y0-z,0,last+8); co.stops.forEach((c1,i)=>fill.addColorStop(i/(co.stops.length-1),c1)); } else fill=co.stops[0];
   ctx.shadowColor='rgba(0,0,0,.65)'; ctx.shadowBlur=22; ctx.shadowOffsetY=5; ctx.fillStyle=fill;
-  lines.forEach((ln,i)=>ctx.fillText(ln,360,y0+i*lh));
+  lines.forEach((ln,i)=>ctx.fillText(ln,cx0,y0+i*lh));
   ctx.restore();
   return bottom;
 }
 function logoRect(){
   const L=state.logo; if(!L||!L.img||!L.img.complete||!L.img.naturalWidth) return null;
   const pos=state.logoPos, top=pos[0]==='t', mx=40;
-  let w=Math.round(720*state.logoSize/100), h=Math.round(w*L.img.naturalHeight/L.img.naturalWidth);
+  let w=Math.round(FR.w*state.logoSize/100), h=Math.round(w*L.img.naturalHeight/L.img.naturalWidth);
   if(h>360){ w=Math.round(w*360/h); h=360; }
-  const x=pos[1]==='l'?mx:pos[1]==='c'?(720-w)/2:720-mx-w, y=top?44:1280-170-h;
+  const x=pos[1]==='l'?mx:pos[1]==='c'?(FR.w-w)/2:FR.w-mx-w, y=top?44:FR.h-170-h;
   return {x,y,w,h,top};
 }
 function drawLogo(ctx){
@@ -1011,11 +1029,15 @@ function drawLogo(ctx){
   ctx.save(); ctx.globalAlpha=state.logoOp/100; ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=10; ctx.drawImage(state.logo.img,r.x,r.y,r.w,r.h); ctx.restore();
 }
 function renderFrame(ctx,W,H,o){
-  const k=W/720; ctx.save(); ctx.scale(k,k);
-  if(o.overlay) ctx.clearRect(0,0,720,1280);
-  else { ctx.fillStyle='#000'; ctx.fillRect(0,0,720,1280); if(o.card) drawCard(ctx,o); else if(o.reframe==='split') drawSplit(ctx,o.video,o.focus,k); else drawVideoCover(ctx,o.video,720,1280,o.reframe,o.focus,k); }
+  const k=W/FR.w; ctx.save(); ctx.scale(k,k);
+  if(o.overlay) ctx.clearRect(0,0,FR.w,FR.h);
+  else {
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,FR.w,FR.h);
+    if(o.card){ ctx.fillStyle='#0B0B0D'; ctx.fillRect(0,0,FR.w,FR.h); const cs=Math.min(FR.w/720,FR.h/1280); ctx.save(); ctx.translate((FR.w-720*cs)/2,(FR.h-1280*cs)/2); ctx.scale(cs,cs); drawCard(ctx,o); ctx.restore(); }
+    else if(o.reframe==='split') drawSplit(ctx,o.video,o.focus,k); else drawVideoCover(ctx,o.video,FR.w,FR.h,o.reframe,o.focus,k);
+  }
   const ty=o.clip&&o.clip.title?drawTitle(ctx,o.clip,o.t):0;
-  const cf=o.live?{text:o.live,lt:NaN,act:-1}:capFor(o.clip,o.t); if(cf) drawCaption(ctx,cf.text,capStyleOf(o.style),o.pos,cf.lt,cf.act,ty?Math.max(200,ty+34):200);
+  const cf=o.live?{text:o.live,lt:NaN,act:-1}:capFor(o.clip,o.t); if(cf) drawCaption(ctx,cf.text,capStyleOf(o.style),o.pos,cf.lt,cf.act,ty?Math.max(Math.round(FR.h*.156),ty+34):Math.round(FR.h*.156));
   drawLogo(ctx);
   ctx.restore();
 }
@@ -1065,7 +1087,7 @@ function phoneLoop(){
   }
   renderFrame(ctx,cv.width,cv.height,{video:$('#player'),clip:c,t,frac,card:state.src.type==='remote'&&!isYT(),overlay:isYT(),style:state.style,pos:state.pos,reframe:state.reframe,focus:state.focus,info:state.info,live:liveText()});
   if(state.reframe==='split'&&SPLIT.hud&&!isYT()){ ctx.save(); const W=cv.width; ctx.fillStyle='rgba(11,11,13,.78)'; ctx.fillRect(0,cv.height-W*.075,W,W*.075); ctx.fillStyle='#FF4D00'; ctx.font=`700 ${Math.round(W*.032)}px "JetBrains Mono"`; ctx.textAlign='center'; ctx.fillText(SPLIT.hud,W/2,cv.height-W*.028); ctx.restore(); }
-  if(isYT()){ const py=$('#phoneYt'); py.style.setProperty('--fx',state.focus); py.classList.toggle('fit',state.reframe==='fit'); }
+  if(isYT()){ const py=$('#phoneYt'); py.style.setProperty('--fx',state.focus); py.classList.toggle('fit',state.reframe==='fit'||state.ratio!=='9:16'); }
   if(state.subBusy){
     ctx.save(); const W=cv.width; ctx.fillStyle='rgba(11,11,13,.82)'; ctx.fillRect(0,cv.height*.46,W,cv.height*.08);
     ctx.fillStyle='#FF4D00'; ctx.font=`700 ${Math.round(W*.04)}px "JetBrains Mono"`; ctx.textAlign='center';
@@ -2078,7 +2100,7 @@ async function exportClip(clip){
 
 /* --- ekspor nyata & kartu teks: memakai renderFrame yang sama dengan bingkai 9:16 --- */
 async function recordFrames(clip,{video,card,dur,audio}){
-  const W=720,H=1280, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const W=FR.w,H=FR.h, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d'), stream=cv.captureStream(30);
   if(audio) audio.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
   const rec=new MediaRecorder(stream,{mimeType:pickMime(),videoBitsPerSecond:5_000_000});
@@ -2094,7 +2116,7 @@ async function recordFrames(clip,{video,card,dur,audio}){
     (function loop(){
       const el=(performance.now()-t0)/1000, frac=clamp(el/dur,0,1);
       renderFrame(ctx,W,H,{...o,t:el,frac});
-      setProgress(clip.id,frac,`MERENDER 9:16 — ${Math.round(frac*100)}%`);
+      setProgress(clip.id,frac,`MERENDER ${state.ratio} — ${Math.round(frac*100)}%`);
       if(el>=dur || (video&&video.ended)){ res(); return; }
       requestAnimationFrame(loop);
     })();
@@ -2154,7 +2176,7 @@ async function exportYTCapture(clip){
     await new Promise(res=>{
       const iv=setInterval(()=>{
         const el=(performance.now()-t0)/1000, f=clamp(el/clip.len,0,1);
-        setProgress(clip.id,f,`MEREKAM BINGKAI 9:16 — ${Math.round(f*100)}%`);
+        setProgress(clip.id,f,`MEREKAM BINGKAI ${state.ratio} — ${Math.round(f*100)}%`);
         if(state.activeClip!==clip.id || el>clip.len+8){ clearInterval(iv); res(); }
       },150);
     });
@@ -2282,6 +2304,7 @@ bindSeg('#ccSeg','ytCc',()=>{
   applyCc();
   if(state.ytCc==='on'&&state.reframe==='crop'){ document.querySelector('#refSeg [data-v="fit"]').click(); toast('Subtitle YouTube ditampilkan — bingkai diganti ke MUAT agar tidak terpotong','ok'); }
 });
+bindSeg('#ratioSeg','ratio',()=>{ setRatio(state.ratio); toast('Rasio frame '+state.ratio+' — ekspor memakai ukuran '+FR.w+'×'+FR.h,'ok'); });
 bindSeg('#splitSeg','splitN');
 bindSeg('#refSeg','reframe',()=>{
   $('#focusRng').disabled=state.reframe==='fit'||state.reframe==='split';
